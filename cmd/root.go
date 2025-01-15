@@ -30,7 +30,7 @@ offer persistent storage using JSON.`,
 			if task.Completed {
 				check = "X"
 			}
-			fmt.Printf("%d\t\t[%s]\t\t%s\n", task.ID, check, task.Name)
+			fmt.Printf("%d\t[%s]\t%s\n", task.ID, check, task.Name)
 		}
 	},
 }

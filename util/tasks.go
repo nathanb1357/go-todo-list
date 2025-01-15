@@ -15,17 +15,22 @@ type Task struct {
 
 // A manager struct that stores a list of tasks
 type TaskManager struct {
-	Tasks []Task
+	Tasks  []Task
+	NextId int
 }
 
 // Method that adds a new task to the list based on the description
 func (manager *TaskManager) AddTask(name string) {
+	if len(manager.Tasks) == 0 {
+		manager.NextId = 1
+	}
 	newTask := Task{
-		ID:        len(manager.Tasks) + 1,
+		ID:        manager.NextId,
 		Name:      name,
 		Completed: false,
 	}
 	manager.Tasks = append(manager.Tasks, newTask)
+	manager.NextId++
 }
 
 // Marks a task as complete
@@ -52,7 +57,7 @@ func (manager *TaskManager) RemoveTask(id int) error {
 
 // Saves the current task list into a specified file
 func (manager *TaskManager) SaveToFile(fileName string) error {
-	encoded, err := json.Marshal(manager.Tasks)
+	encoded, err := json.Marshal(manager)
 	if err != nil {
 		return err
 	}
@@ -65,5 +70,5 @@ func (manager *TaskManager) LoadFromFile(fileName string) error {
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(file, &manager.Tasks)
+	return json.Unmarshal(file, &manager)
 }
