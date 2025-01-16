@@ -1,4 +1,5 @@
 /* Copyright © 2025 NATHAN BARTYUK */
+
 package main
 
 import (
