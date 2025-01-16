@@ -16,6 +16,7 @@ var deleteCmd = &cobra.Command{
 	Short: "Delete a task from your todo list",
 	Run: func(cmd *cobra.Command, args []string) {
 		deleteAll, _ := cmd.Flags().GetBool("all")
+		deleteFinished, _ := cmd.Flags().GetBool("finished")
 
 		if deleteAll {
 			taskManager.Tasks = []util.Task{}
@@ -28,8 +29,24 @@ var deleteCmd = &cobra.Command{
 			return
 		}
 
+		if deleteFinished {
+			var remainingTasks []util.Task
+			for _, task := range taskManager.Tasks {
+				if !task.Completed {
+					remainingTasks = append(remainingTasks, task)
+				}
+			}
+			taskManager.Tasks = remainingTasks
+			fmt.Println("All finished tasks deleted.")
+
+			if err := taskManager.SaveToFile("temp.json"); err != nil {
+				fmt.Println("Error saving tasks:", err)
+			}
+			return
+		}
+
 		if len(args) == 0 {
-			fmt.Println("Error: You must provide task IDs to delete, or use the --all flag to delete all tasks.")
+			fmt.Printf("Error: You must provide task IDs, use the --all to delete all tasks, \nor use the --finished to delete all finished tasks.\n")
 			return
 		}
 
@@ -63,5 +80,6 @@ var deleteCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(deleteCmd)
 
-	deleteCmd.Flags().Bool("all", false, "Select all tasks for deletion")
+	deleteCmd.Flags().BoolP("all", "a", false, "Delete all tasks")
+	deleteCmd.Flags().BoolP("finished", "f", false, "Delete all finished tasks")
 }

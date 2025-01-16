@@ -12,15 +12,45 @@ import (
 // finishCmd represents the finish command
 var finishCmd = &cobra.Command{
 	Use:   "finish",
-	Short: "Mark a task as completed",
+	Short: "Mark a task on your todo list as complete",
 	Run: func(cmd *cobra.Command, args []string) {
-		argument := args[0]
-		id, err := strconv.Atoi(argument)
-		if err != nil {
-			fmt.Printf("Error: provided ID must be an integer!")
-		} else {
-			taskManager.CompleteTask(id)
-			fmt.Printf("Task %d completed.\n", id)
+		finishAll, _ := cmd.Flags().GetBool("all")
+
+		if finishAll {
+			for i := range taskManager.Tasks {
+				taskManager.Tasks[i].Completed = true
+			}
+			fmt.Println("All tasks marked as compete.")
+
+			if err := taskManager.SaveToFile("temp.json"); err != nil {
+				fmt.Println("Error saving tasks:", err)
+			}
+			return
+		}
+
+		if len(args) == 0 {
+			fmt.Println("Error: You must provide task IDs, or use the --all flag to finish all tasks.")
+			return
+		}
+
+		var finishedIDs []int
+		for _, arg := range args {
+			id, err := strconv.Atoi(arg)
+			if err != nil {
+				fmt.Printf("Error: %s is not a valid task ID.\n", arg)
+				continue
+			}
+
+			err = taskManager.CompleteTask(id)
+			if err != nil {
+				fmt.Printf("Error: Task with ID %d not found.\n", id)
+			} else {
+				finishedIDs = append(finishedIDs, id)
+			}
+		}
+
+		if len(finishedIDs) > 0 {
+			fmt.Printf("Finished tasks with IDs: %v\n", finishedIDs)
 
 			// Save tasks to the JSON file
 			if err := taskManager.SaveToFile("temp.json"); err != nil {
@@ -33,13 +63,5 @@ var finishCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(finishCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// finishCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// finishCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	finishCmd.Flags().Bool("all", false, "Mark all tasks as complete")
 }
